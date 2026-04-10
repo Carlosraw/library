@@ -82,3 +82,17 @@ def actualizar_libro(id:int, libro: LibroCreate, db: Session = Depends(get_db)):
     db.refresh(db_libro)
 
     return db_libro
+
+
+# DELETE libro por id
+@router.delete("/{id}")
+def eliminar_libro(id:int, db: Session = Depends(get_db)):
+    libro = db.query(LibroDB).filter(LibroDB.id == id).first()
+    
+    if not libro:
+        raise HTTPException(status_code=404, detail="libro no encontrado")
+    
+    db.delete(libro)
+    db.commit()
+    
+    return {"message":"Libro eliminado correctamente"}
