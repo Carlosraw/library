@@ -96,3 +96,25 @@ def eliminar_libro(id:int, db: Session = Depends(get_db)):
     db.commit()
     
     return {"message":"Libro eliminado correctamente"}
+
+# POST registrar prestamo
+@router.post("/{id}/prestar")
+def prestar_libro(id:int, db: Session = Depends(get_db)):
+
+    libro = db.query(LibroDB).filter(LibroDB.id == id).first()
+
+    if not libro:
+        raise HTTPException(status_code=404, detail="libro no encontrado")
+    
+    if libro.ejemplares_disponibles <=0:
+        raise HTTPException(
+            status_code=400,
+            detail="No hay ejemplares disponibles para prestamo"
+        )
+    
+    libro.ejemplares_disponibles -= 1
+
+    db.commit()
+    db.refresh(libro)
+
+    return{"message": "Libro prestado correctamente"}
