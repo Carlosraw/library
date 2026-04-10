@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from typing import List
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 
@@ -34,3 +35,19 @@ def crear_libro(libro:LibroCreate, db: Session = Depends(get_db)):
     db.refresh(db_libro)
 
     return db_libro
+
+# GET traer libros
+@router.get("/", response_model=List[LibroResponse])
+def listar_libros(db: Session = Depends(get_db)):
+    libros = db.query(LibroDB).all()
+    return libros
+
+# GET traer libro por id
+@router.get("/{id}", response_model=LibroResponse)
+def obtener_libro(id:int, db: Session = Depends(get_db)):
+    libro = db.query(LibroDB).filter(LibroDB.id == id).first()
+    
+    if not libro:
+        raise HTTPException(status_code=404, detail="libro no encontrado")
+    
+    return libro
