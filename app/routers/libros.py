@@ -51,3 +51,34 @@ def obtener_libro(id:int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="libro no encontrado")
     
     return libro
+
+# PUT actualizar libro
+@router.put("/{id}", response_model=LibroResponse)
+def actualizar_libro(id:int, libro: LibroCreate, db: Session = Depends(get_db)):
+
+    db_libro = db.query(LibroDB).filter(LibroDB.id == id).first()
+
+    if not db_libro:
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
+    
+    if db_libro.ejemplares_disponibles > libro.total_ejemplares:
+        raise HTTPException(
+            status_code=400,
+            detail="Los ejemplares disponibles no pueden ser mayores al total"
+        )
+    
+    db_libro.titulo = libro.titulo
+    db_libro.autor = libro.autor
+    db_libro.categoria = libro.categoria
+    db_libro.anio_publicacion = libro.anio_publicacion
+
+    libros_prestados = db_libro.total_ejemplares - db_libro.ejemplares_disponibles
+    db_libro.total_ejemplares = libro.total_ejemplares
+    db_libro.ejemplares_disponibles = libro.total_ejemplares - libros_prestados
+
+    
+
+    db.commit()
+    db.refresh(db_libro)
+
+    return db_libro
